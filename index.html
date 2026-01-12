@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WW1234-114 Sentences</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas for screenshots -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts: Nunito for English text -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* 定義 EngTRESS A 字型，如果本地有安裝會優先使用 */
+        @font-face {
+            font-family: 'EngTRESS A';
+            src: local('EngTRESS A'), local('EngTressA');
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Nunito', sans-serif;
+            background-color: #f0f9ff; /* Light Blue Background */
+            touch-action: manipulation; /* Improves touch response */
+        }
+        
+        /* 專門用於題目與單字的字型設定 */
+        .eng-font {
+            font-family: 'EngTRESS A', 'Nunito', sans-serif;
+        }
+
+        .word-chip {
+            transition: all 0.2s;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .word-chip:active {
+            transform: scale(0.95);
+        }
+        .word-chip:hover {
+            transform: translateY(-2px);
+        }
+        /* Style for the slots */
+        .slot {
+            min-width: 60px;
+            min-height: 50px;
+            border-bottom: 3px solid #cbd5e1;
+        }
+        /* Custom Checkbox */
+        .custom-checkbox:checked + div {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+    <!-- Header / Student Info Display (Visible in Game) -->
+    <div id="header-info" class="hidden w-full max-w-5xl bg-white rounded-xl shadow-lg p-5 mb-6 flex justify-between items-center border-l-8 border-blue-500">
+        <div class="text-2xl font-bold text-gray-700">
+            <span class="mr-6"><i class="fas fa-users text-blue-500"></i> <span id="disp-class"></span></span>
+            <span class="mr-6"><i class="fas fa-list-ol text-blue-500"></i> <span id="disp-num"></span></span>
+            <span><i class="fas fa-user text-blue-500"></i> <span id="disp-name"></span></span>
+        </div>
+        <button onclick="restartGame()" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-full shadow transition text-lg">
+            <i class="fas fa-home"></i> 回首頁
+        </button>
+    </div>
+
+    <!-- PAGE 1: SETUP SCREEN -->
+    <div id="setup-screen" class="w-full max-w-5xl bg-white rounded-3xl shadow-2xl p-8 md:p-12 animate-fade-in border-4 border-blue-100">
+        <h1 class="text-4xl md:text-6xl font-extrabold text-center text-blue-600 mb-10 eng-font tracking-wide">WW1234-114 Sentences</h1>
+        
+        <!-- Student Inputs -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div>
+                <label class="block text-gray-700 text-xl font-bold mb-3">班級 Class</label>
+                <input type="text" id="input-class" class="shadow appearance-none border-2 border-gray-300 rounded-xl w-full py-4 px-5 text-gray-700 text-xl leading-tight focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500" placeholder="例如: 301">
+            </div>
+            <div>
+                <label class="block text-gray-700 text-xl font-bold mb-3">座號 Number</label>
+                <input type="number" id="input-num" class="shadow appearance-none border-2 border-gray-300 rounded-xl w-full py-4 px-5 text-gray-700 text-xl leading-tight focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500" placeholder="例如: 15">
+            </div>
+            <div>
+                <label class="block text-gray-700 text-xl font-bold mb-3">姓名 Name</label>
+                <input type="text" id="input-name" class="shadow appearance-none border-2 border-gray-300 rounded-xl w-full py-4 px-5 text-gray-700 text-xl leading-tight focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500" placeholder="你的名字">
+            </div>
+        </div>
+
+        <!-- Curriculum Selection -->
+        <div class="mb-10">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-200 pb-3"><i class="fas fa-book-open text-green-500"></i> 選擇練習範圍 (可複選)</h2>
+            
+            <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                <table class="w-full text-left text-gray-500">
+                    <thead class="text-lg text-gray-700 uppercase bg-blue-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-4 border-b">Book</th>
+                            <th scope="col" class="px-4 py-4 text-center border-b">Unit 1</th>
+                            <th scope="col" class="px-4 py-4 text-center border-b">Unit 2</th>
+                            <th scope="col" class="px-4 py-4 text-center border-b">Unit 3</th>
+                            <th scope="col" class="px-4 py-4 text-center border-b">Unit 4</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-lg">
+                        <!-- WW1 -->
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-5 font-bold text-xl text-gray-900 bg-gray-50">WW1</td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW1-U1">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">年齡(數字)</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW1-U2">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">情緒</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW1-U3">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">玩具</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW1-U4">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">顏色</div>
+                                </label>
+                            </td>
+                        </tr>
+                        <!-- WW2 -->
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-5 font-bold text-xl text-gray-900 bg-gray-50">WW2</td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW2-U1">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">動物</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW2-U2">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">才能</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW2-U3">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">家人</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW2-U4">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">職業</div>
+                                </label>
+                            </td>
+                        </tr>
+                        <!-- WW3 -->
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-5 font-bold text-xl text-gray-900 bg-gray-50">WW3</td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW3-U1">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">天氣</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW3-U2">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">時間</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW3-U3">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">文具</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW3-U4">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">位置</div>
+                                </label>
+                            </td>
+                        </tr>
+                        <!-- WW4 -->
+                        <tr class="bg-white border-b hover:bg-gray-50">
+                            <td class="px-6 py-5 font-bold text-xl text-gray-900 bg-gray-50">WW4</td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW4-U1">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">房間</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW4-U2">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">動作</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW4-U3">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">食物</div>
+                                </label>
+                            </td>
+                            <td class="text-center p-3">
+                                <label class="cursor-pointer flex flex-col items-center">
+                                    <input type="checkbox" class="custom-checkbox hidden" value="WW4-U4">
+                                    <div class="w-full py-3 px-2 border-2 rounded-lg transition text-base font-bold shadow-sm">動物園</div>
+                                </label>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 text-right">
+                <button onclick="selectAll()" class="text-blue-600 text-lg font-bold hover:underline mr-4 bg-blue-50 px-3 py-1 rounded">全選</button>
+                <button onclick="clearAll()" class="text-red-500 text-lg font-bold hover:underline bg-red-50 px-3 py-1 rounded">清除</button>
+            </div>
+        </div>
+
+        <button onclick="startGame()" class="w-full bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white font-extrabold py-5 rounded-2xl text-2xl md:text-3xl shadow-xl transform transition hover:scale-102 hover:shadow-2xl">
+            <i class="fas fa-play-circle text-3xl md:text-4xl mr-2"></i> 開始練習 (Start)
+        </button>
+    </div>
+
+    <!-- PAGE 2: GAME AREA -->
+    <div id="game-area" class="hidden w-full max-w-5xl">
+        <div id="questions-container" class="space-y-8">
+            <!-- Questions will be injected here via JS -->
+        </div>
+
+        <!-- Action Bar -->
+        <div class="mt-10 flex flex-col md:flex-row gap-6 justify-center items-center pb-12">
+            <button onclick="checkAllAnswers()" class="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition">
+                <i class="fas fa-check-double"></i> 檢查答案 (Check)
+            </button>
+            <button id="btn-download-all" onclick="downloadAllResults()" class="hidden w-full md:w-auto bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition">
+                <i class="fas fa-file-download"></i> 下載全部成果
+            </button>
+            <!-- Changed onclick to replayGame -->
+            <button onclick="replayGame()" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition">
+                <i class="fas fa-redo"></i> 再練習一次
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Container for generating "All Results" Image -->
+    <div id="report-card-container" class="fixed top-0 left-0 pointer-events-none opacity-0" style="z-index: -1;">
+    </div>
+
+    <script>
+        // --- 1. DATA: Question Bank ---
+        const questionBank = {
+            "WW1-U1": [ // Age, Numbers
+                "How old are you?",
+                "I am nine years old.",
+                "I am ten.",
+                "How old is he?",
+                "Are you seven?",
+                "She is eight years old."
+            ],
+            "WW1-U2": [ // Emotions
+                "Are you happy?",
+                "Yes, I am.",
+                "No, I am not.",
+                "I am sad.",
+                "Is he angry?",
+                "She is not tired."
+            ],
+            "WW1-U3": [ // Toys
+                "What is it?",
+                "It is a robot.",
+                "Is this a ball?",
+                "It is a kite.",
+                "It is a doll.",
+                "Is that a yo-yo?"
+            ],
+            "WW1-U4": [ // Colors
+                "What color is it?",
+                "It is red.",
+                "It is blue.",
+                "Is it yellow?",
+                "It is green.",
+                "It is a pink flower."
+            ],
+            "WW2-U1": [ // Animals
+                "What is it?",
+                "It is a cat.",
+                "Is it a dog?",
+                "It is a big elephant.",
+                "Is it a rabbit?",
+                "It is a turtle."
+            ],
+            "WW2-U2": [ // Talents
+                "Can you swim?",
+                "Yes, I can.",
+                "I can dance.",
+                "Can he sing?",
+                "She can draw.",
+                "No, I cannot."
+            ],
+            "WW2-U3": [ // Family
+                "Who's she?",
+                "She is my mother.",
+                "Who's he?",
+                "He is my brother.",
+                "She is my sister.",
+                "He is my father."
+            ],
+            "WW2-U4": [ // Occupations
+                "Is he a doctor?",
+                "No, he's a nurse.",
+                "She is a cook.",
+                "He is a teacher.",
+                "Is she a student?",
+                "He is a doctor."
+            ],
+            "WW3-U1": [ // Weather
+                "How's the weather?",
+                "It is sunny.",
+                "It is rainy.",
+                "It is cloudy.",
+                "Is it windy?",
+                "It is cold today."
+            ],
+            "WW3-U2": [ // Time
+                "What time is it?",
+                "It is two o'clock.",
+                "It is twelve thirty.",
+                "It is five o'clock.",
+                "It is nine fifteen.",
+                "It is time for lunch."
+            ],
+            "WW3-U3": [ // Stationery
+                "Where is the pen?",
+                "It is a ruler.",
+                "Where are the markers?",
+                "Do you have an eraser?",
+                "Is this your book?",
+                "Where is the pencil?"
+            ],
+            "WW3-U4": [ // Location (Prepositions)
+                "It is in the box.",
+                "It is under the desk.",
+                "The cat is on the chair.",
+                "Where is the bag?",
+                "It is by the desk.",
+                "The dog is under the table."
+            ],
+            "WW4-U1": [ // Rooms
+                "Where are you?",
+                "I'm in the bedroom.",
+                "Where is he?",
+                "He is in the bathroom.",
+                "Are you in the kitchen?",
+                "She is in the living room."
+            ],
+            "WW4-U2": [ // Daily Actions
+                "What are you doing?",
+                "I am sleeping.",
+                "I'm cooking.",
+                "He is reading.",
+                "She is eating.",
+                "Are you drinking?"
+            ],
+            "WW4-U3": [ // Food
+                "What do you want?",
+                "I want a hamburger.",
+                "Do you want milk?",
+                "I want some juice.",
+                "I want an egg.",
+                "I want ice cream."
+            ],
+            "WW4-U4": [ // Zoo Animals
+                "Do you like lions?",
+                "Yes, I do.",
+                "No, I don't.",
+                "I like monkeys.",
+                "Does he like zebras?",
+                "She likes tigers."
+            ]
+        };
+
+        // --- 2. GAME STATE ---
+        let currentQuestions = []; // Array of {original: str, scrambled: array, userAnswer: array, id: int}
+        let studentData = { class: '', num: '', name: '' };
+
+        // --- 3. UTILITY FUNCTIONS ---
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Tokenize sentence into words and punctuation
+        function tokenize(sentence) {
+            // Add spaces around punctuation so they become separate tokens, then split
+            // Keep basic punctuation: . ? ! , 's (sometimes tricky, let's keep simple)
+            // A simple regex to split by space but keep punctuation attached is hard for shuffling.
+            // Better strategy: Treat punctuation as a separate "word" block.
+            return sentence.match(/[\w']+|[.,!?;]/g);
+        }
+
+        function selectAll() {
+            document.querySelectorAll('.custom-checkbox').forEach(cb => cb.checked = true);
+        }
+
+        function clearAll() {
+            document.querySelectorAll('.custom-checkbox').forEach(cb => cb.checked = false);
+        }
+
+        // --- 4. GAME LOGIC ---
+
+        function startGame() {
+            // 1. Get Student Info
+            const sClass = document.getElementById('input-class').value.trim();
+            const sNum = document.getElementById('input-num').value.trim();
+            const sName = document.getElementById('input-name').value.trim();
+
+            if (!sClass || !sNum || !sName) {
+                alert("請填寫班級、座號和姓名！ (Please fill in Class, Number, and Name)");
+                return;
+            }
+
+            studentData = { class: sClass, num: sNum, name: sName };
+            
+            // Update Header
+            document.getElementById('disp-class').textContent = sClass;
+            document.getElementById('disp-num').textContent = sNum;
+            document.getElementById('disp-name').textContent = sName;
+
+            // 2. Get Selected Units and generate questions
+            const pool = getSelectedPool();
+            if (!pool) {
+                alert("請至少選擇一個單元！ (Please select at least one unit)");
+                return;
+            }
+
+            // 3. Generate and Render
+            generateQuestionsFromPool(pool);
+            renderGame();
+            
+            // Switch Screens
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('header-info').classList.remove('hidden');
+            document.getElementById('game-area').classList.remove('hidden');
+            document.getElementById('btn-download-all').classList.add('hidden'); // Hide until checked
+        }
+
+        function getSelectedPool() {
+            const checkboxes = document.querySelectorAll('.custom-checkbox:checked');
+            if (checkboxes.length === 0) return null;
+            let pool = [];
+            checkboxes.forEach(cb => {
+                if (questionBank[cb.value]) {
+                    pool = pool.concat(questionBank[cb.value]);
+                }
+            });
+            return pool;
+        }
+
+        function generateQuestionsFromPool(pool) {
+             if (pool.length < 5) {
+                // If pool is small, just shuffle what we have. But usually pool is big enough.
+                // Duplicate pool to ensure 5 if needed (rare case)
+                while(pool.length < 5) pool = pool.concat(pool); 
+            }
+            
+            const shuffledPool = shuffleArray([...pool]); // Copy and shuffle
+            const selectedSentences = shuffledPool.slice(0, 5); // Take top 5
+
+            // Prepare Game Data
+            currentQuestions = selectedSentences.map((sentence, index) => {
+                const tokens = tokenize(sentence);
+                // Create a copy for scrambling
+                let scrambled = [...tokens];
+                // Shuffle until it's not the same as original (simple check)
+                if (tokens.length > 1) {
+                    let attempts = 0;
+                    while (scrambled.join(' ') === tokens.join(' ') && attempts < 10) {
+                        scrambled = shuffleArray(scrambled);
+                        attempts++;
+                    }
+                }
+                
+                return {
+                    id: index + 1,
+                    originalText: sentence,
+                    correctTokens: tokens,
+                    initialScrambled: scrambled, // What is currently available in the bank
+                    userAnswer: [] // What is currently in the answer line
+                };
+            });
+        }
+
+        function renderGame() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+
+            currentQuestions.forEach((q, idx) => {
+                const qCard = document.createElement('div');
+                qCard.className = "bg-white rounded-2xl shadow-md p-6 border-2 border-gray-100 question-card";
+                qCard.id = `q-card-${idx}`;
+                qCard.dataset.index = idx;
+
+                // Title Row
+                const titleRow = document.createElement('div');
+                titleRow.className = "flex justify-between items-center mb-6";
+                titleRow.innerHTML = `
+                    <h3 class="font-bold text-gray-500 text-2xl">Question ${idx + 1}</h3>
+                    <div class="flex gap-2">
+                        <button onclick="resetQuestion(${idx})" class="text-gray-400 hover:text-blue-500 p-2 text-2xl" title="重置本題">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button onclick="downloadSingle(${idx})" class="text-gray-400 hover:text-green-500 p-2 text-2xl" title="下載本題成果">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
+                `;
+                qCard.appendChild(titleRow);
+
+                // Answer Zone (The line where words go)
+                const answerZone = document.createElement('div');
+                answerZone.className = "min-h-[90px] bg-blue-50 rounded-xl border-2 border-dashed border-blue-300 flex flex-wrap items-center p-4 gap-3 mb-6 transition-colors";
+                answerZone.id = `answer-zone-${idx}`;
+                
+                // Render User Answers
+                if (q.userAnswer.length === 0) {
+                    answerZone.innerHTML = '<span class="text-gray-400 italic text-xl w-full text-center pointer-events-none">點擊下方單字 Click words below</span>';
+                } else {
+                    q.userAnswer.forEach((word, wIdx) => {
+                        const chip = createWordChip(word, 'blue', () => removeWordFromAnswer(idx, wIdx));
+                        answerZone.appendChild(chip);
+                    });
+                }
+                qCard.appendChild(answerZone);
+
+                // Word Bank (Scrambled words)
+                const wordBank = document.createElement('div');
+                wordBank.className = "flex flex-wrap justify-center gap-4 p-2";
+                wordBank.id = `word-bank-${idx}`;
+
+                // Calculate which words are remaining in the bank
+                // We need to count occurrences because a word might appear twice ("is", "a")
+                const availableWords = getAvailableWords(q.initialScrambled, q.userAnswer);
+
+                availableWords.forEach((word) => {
+                    const chip = createWordChip(word, 'white', () => addWordToAnswer(idx, word));
+                    wordBank.appendChild(chip);
+                });
+                qCard.appendChild(wordBank);
+
+                // Feedback Area (Hidden initially)
+                const feedback = document.createElement('div');
+                feedback.id = `feedback-${idx}`;
+                feedback.className = "hidden mt-4 text-center font-bold text-3xl";
+                qCard.appendChild(feedback);
+
+                container.appendChild(qCard);
+            });
+        }
+
+        // Helper to handle duplicate words in bank
+        function getAvailableWords(allWords, usedWords) {
+            let bank = [...allWords];
+            let used = [...usedWords];
+            
+            // Remove used words from bank one by one
+            used.forEach(u => {
+                const index = bank.indexOf(u);
+                if (index > -1) {
+                    bank.splice(index, 1);
+                }
+            });
+            return bank;
+        }
+
+        function createWordChip(text, style, onClick) {
+            const btn = document.createElement('div');
+            btn.textContent = text;
+            btn.onclick = onClick;
+            
+            // INCREASED FONT SIZE HERE: text-3xl md:text-5xl
+            const baseClass = "word-chip px-6 py-4 rounded-2xl font-bold text-3xl md:text-5xl eng-font border-b-4 shadow-sm select-none ";
+            
+            if (style === 'blue') {
+                btn.className = baseClass + "bg-blue-500 text-white border-blue-700 hover:bg-blue-600 hover:border-blue-800";
+            } else {
+                btn.className = baseClass + "bg-white text-gray-800 border-gray-300 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50";
+            }
+            return btn;
+        }
+
+        // --- 5. INTERACTION ---
+
+        function addWordToAnswer(qIndex, word) {
+            // Remove check result if exists
+            clearFeedback(qIndex);
+            
+            // Add to model
+            currentQuestions[qIndex].userAnswer.push(word);
+            
+            // Re-render ONLY this question card (optimization)
+            reRenderCard(qIndex);
+        }
+
+        function removeWordFromAnswer(qIndex, wordIndex) {
+             // Remove check result if exists
+             clearFeedback(qIndex);
+
+            // Remove from model
+            currentQuestions[qIndex].userAnswer.splice(wordIndex, 1);
+            
+            // Re-render
+            reRenderCard(qIndex);
+        }
+
+        function resetQuestion(qIndex) {
+            clearFeedback(qIndex);
+            currentQuestions[qIndex].userAnswer = [];
+            reRenderCard(qIndex);
+        }
+
+        function clearFeedback(qIndex) {
+            const fb = document.getElementById(`feedback-${qIndex}`);
+            const zone = document.getElementById(`answer-zone-${qIndex}`);
+            if (fb) fb.className = "hidden mt-4 text-center font-bold text-3xl";
+            if (zone) {
+                zone.classList.remove('bg-green-100', 'border-green-400', 'bg-red-50', 'border-red-400', 'bg-blue-50', 'border-blue-300');
+                zone.classList.add('bg-blue-50', 'border-blue-300');
+            }
+        }
+
+        function reRenderCard(qIndex) {
+            const q = currentQuestions[qIndex];
+            const answerZone = document.getElementById(`answer-zone-${qIndex}`);
+            const wordBank = document.getElementById(`word-bank-${qIndex}`);
+            
+            // 1. Update Answer Zone
+            answerZone.innerHTML = '';
+            if (q.userAnswer.length === 0) {
+                answerZone.innerHTML = '<span class="text-gray-400 italic text-xl w-full text-center pointer-events-none">點擊下方單字 Click words below</span>';
+            } else {
+                q.userAnswer.forEach((word, wIdx) => {
+                    const chip = createWordChip(word, 'blue', () => removeWordFromAnswer(qIndex, wIdx));
+                    answerZone.appendChild(chip);
+                });
+            }
+
+            // 2. Update Word Bank
+            wordBank.innerHTML = '';
+            const availableWords = getAvailableWords(q.initialScrambled, q.userAnswer);
+            availableWords.forEach((word) => {
+                const chip = createWordChip(word, 'white', () => addWordToAnswer(qIndex, word));
+                wordBank.appendChild(chip);
+            });
+        }
+
+        // Renamed to replayGame for "再練習一次"
+        function replayGame() {
+            if(!confirm("確定要再練習一次嗎？\nPlay again with new questions?")) return;
+            
+            const pool = getSelectedPool();
+            if (!pool) return; // Should not happen if we are in game view
+            
+            generateQuestionsFromPool(pool);
+            renderGame();
+            
+            // UI Resets
+            document.getElementById('btn-download-all').classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        // Kept restartGame for Header "Home" button
+        function restartGame() {
+            if(confirm("確定要回首頁嗎？目前的進度會消失。\nGo back to home?")) {
+                document.getElementById('game-area').classList.add('hidden');
+                document.getElementById('header-info').classList.add('hidden');
+                document.getElementById('setup-screen').classList.remove('hidden');
+                // Scroll to top
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // --- 6. CHECKING & RESULTS ---
+
+        function checkAllAnswers() {
+            let correctCount = 0;
+
+            currentQuestions.forEach((q, idx) => {
+                const userStr = q.userAnswer.join('').replace(/\s+/g, ''); // Simple join, ignore spaces logic for check
+                const correctStr = q.correctTokens.join('').replace(/\s+/g, '');
+                
+                const feedbackEl = document.getElementById(`feedback-${idx}`);
+                const zone = document.getElementById(`answer-zone-${idx}`);
+                
+                feedbackEl.classList.remove('hidden', 'text-green-600', 'text-red-500');
+                zone.classList.remove('bg-blue-50', 'border-blue-300', 'bg-green-100', 'border-green-400', 'bg-red-50', 'border-red-400');
+
+                // Case insensitive check? Usually for kids exact match including punctuation is taught.
+                // But let's be strict on order.
+                const isCorrect = (q.userAnswer.join(' ') === q.correctTokens.join(' '));
+
+                if (isCorrect) {
+                    correctCount++;
+                    feedbackEl.innerHTML = '<i class="fas fa-check-circle"></i> Correct! Good job!';
+                    feedbackEl.classList.add('text-green-600');
+                    zone.classList.add('bg-green-100', 'border-green-400');
+                } else {
+                    feedbackEl.innerHTML = `<i class="fas fa-times-circle"></i> Try again!`;
+                    feedbackEl.classList.add('text-red-500');
+                    zone.classList.add('bg-red-50', 'border-red-400');
+                }
+            });
+
+            // Show download all button
+            document.getElementById('btn-download-all').classList.remove('hidden');
+            
+            if (correctCount === 5) {
+                // 觸發灑花特效，持續5秒
+                startConfetti();
+                // 5秒後才顯示彈跳視窗，避免阻擋灑花
+                setTimeout(() => alert("恭喜！全部答對了！\nExcellent! All correct!"), 5000);
+            }
+        }
+        
+        // --- 8. CONFETTI ANIMATION ---
+        
+        function startConfetti() {
+            // Check if confetti is loaded
+            if (typeof confetti !== 'function') {
+                console.warn('Confetti library not loaded');
+                return;
+            }
+
+            var duration = 5 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 150, zIndex: 9999, gravity: 0.8 };
+
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+              var timeLeft = animationEnd - Date.now();
+
+              if (timeLeft <= 0) {
+                return clearInterval(interval);
+              }
+
+              var particleCount = 40 * (timeLeft / duration);
+              
+              // Spawn from top-left and top-right areas, but strictly ON screen (y > 0)
+              // y: 0.1 to 0.4
+              confetti(Object.assign({}, defaults, { 
+                  particleCount, 
+                  origin: { x: randomInRange(0.1, 0.3), y: Math.random() * 0.3 + 0.1 } 
+              }));
+              confetti(Object.assign({}, defaults, { 
+                  particleCount, 
+                  origin: { x: randomInRange(0.7, 0.9), y: Math.random() * 0.3 + 0.1 } 
+              }));
+            }, 250);
+        }
+
+        // --- 7. EXPORT IMAGES ---
+
+        function downloadSingle(idx) {
+            const element = document.getElementById(`q-card-${idx}`);
+            // Add student info to the card temporarily for the screenshot
+            const tempInfo = document.createElement('div');
+            tempInfo.innerHTML = `<div class="text-xl text-gray-500 mb-2 border-b pb-2 font-bold">
+                ${studentData.class} - ${studentData.num} ${studentData.name}
+            </div>`;
+            element.prepend(tempInfo);
+
+            html2canvas(element, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
+                // Remove temp info
+                element.removeChild(tempInfo);
+                
+                saveCanvas(canvas, `${studentData.class}_${studentData.num}_${studentData.name}_Q${idx+1}.png`);
+            });
+        }
+
+        function downloadAllResults() {
+            // Create a custom report layout off-screen
+            const reportContainer = document.getElementById('report-card-container');
+            reportContainer.innerHTML = ''; // Clear previous
+
+            const report = document.createElement('div');
+            report.className = "bg-white p-10 w-[900px] border-8 border-blue-500 rounded-3xl";
+            
+            let htmlContent = `
+                <div class="text-center mb-8 border-b-4 border-gray-200 pb-6">
+                    <h1 class="text-4xl font-extrabold text-blue-600 mb-4 eng-font">WW1234 Sentence Practice</h1>
+                    <div class="text-3xl font-bold text-gray-700">
+                        Class: <span class="text-blue-500">${studentData.class}</span> &nbsp;&nbsp;
+                        Number: <span class="text-blue-500">${studentData.num}</span> &nbsp;&nbsp;
+                        Name: <span class="text-blue-500">${studentData.name}</span>
+                    </div>
+                    <div class="text-lg text-gray-400 mt-4">${new Date().toLocaleString()}</div>
+                </div>
+                <div class="space-y-5">
+            `;
+
+            currentQuestions.forEach((q, i) => {
+                const userText = q.userAnswer.join(' ');
+                const correctText = q.correctTokens.join(' ');
+                const isCorrect = userText === correctText;
+                const statusIcon = isCorrect ? '<span class="text-green-500 text-3xl">✔</span>' : '<span class="text-red-500 text-3xl">✘</span>';
+                const styleClass = isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+
+                htmlContent += `
+                    <div class="flex items-center p-4 rounded-xl border-2 ${styleClass}">
+                        <div class="w-12 font-bold text-gray-500 text-2xl">${i+1}.</div>
+                        <div class="flex-grow">
+                            <div class="text-3xl font-bold text-gray-800 eng-font tracking-wide">${userText || '(No Answer)'}</div>
+                            ${!isCorrect ? `<div class="text-xl text-gray-500 mt-2 font-mono">Ans: ${correctText}</div>` : ''}
+                        </div>
+                        <div class="w-12 text-right">${statusIcon}</div>
+                    </div>
+                `;
+            });
+
+            htmlContent += `
+                </div>
+                <div class="mt-10 text-center text-gray-400 text-lg font-bold">Great Job! Keep practicing!</div>
+            `;
+
+            report.innerHTML = htmlContent;
+            reportContainer.appendChild(report);
+
+            // Wait a moment for rendering
+            setTimeout(() => {
+                html2canvas(report, { scale: 2 }).then(canvas => {
+                    saveCanvas(canvas, `${studentData.class}_${studentData.num}_${studentData.name}_All_Results.png`);
+                    reportContainer.innerHTML = ''; // Cleanup
+                });
+            }, 500);
+        }
+
+        function saveCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = filename;
+            link.click();
+        }
+
+    </script>
+</body>
+</html>
